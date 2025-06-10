@@ -1,5 +1,6 @@
 const Recipe = require('../models/Recipe');
 const Review = require('../models/Review');
+const User = require('../models/User');
 const multer = require('multer');
 const path = require('path');
 
@@ -17,18 +18,20 @@ const upload = multer({ storage });
 // Add new recipe
 exports.addRecipe = async (req, res) => {
   try {
-    const { title, description, ingredients, steps, category, event, prepTime, servingSize, difficulty, nutritionalInfo } = req.body;
+    const { title, description, ingredients, steps, category, subcategory, event, prepTime, servingSize, difficulty, nutritionalInfo } = req.body;
     const image = req.file ? req.file.filename : null;
     const video = req.file && req.file.mimetype.startsWith('video') ? req.file.filename : null;
+    const parsedIngredients = JSON.parse(ingredients); // [{name, quantity}]
     const recipe = await Recipe.create({
       user: req.user._id,
       title,
       description,
-      ingredients: JSON.parse(ingredients),
+      ingredients: parsedIngredients,
       steps: JSON.parse(steps),
       image,
       video,
       category,
+      subcategory,
       event,
       prepTime,
       servingSize,
@@ -110,6 +113,45 @@ exports.getEventRecipes = async (req, res) => {
   }
 };
 
-// Favorite, meal planner, shopping list, and social sharing logic would be added here as well.
+// Get all categories and subcategories
+exports.getCategories = async (req, res) => {
+  try {
+    const recipes = await Recipe.find({}, 'category subcategory');
+    const categories = {};
+    recipes.forEach(r => {
+      if (!categories[r.category]) categories[r.category] = new Set();
+      if (r.subcategory) categories[r.category].add(r.subcategory);
+    });
+    // Convert sets to arrays
+    const result = {};
+    Object.entries(categories).forEach(([cat, subs]) => {
+      result[cat] = Array.from(subs);
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Favorite/unfavorite recipe
+exports.toggleFavorite = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const recipeId = req.params.id;
+    const idx = user.favorites.indexOf(recipeId);
+    let action;
+    if (idx === -1) {
+      user.favorites.push(recipeId);
+      action = 'added';
+    } else {
+      user.favorites.splice(idx, 1);
+      action = 'removed';
+    }
+    await user.save();
+    res.json({ message: `Favorite ${action}` });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 exports.upload = upload;
