@@ -11,6 +11,7 @@ const RecipeDetails = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showShareOptions, setShowShareOptions] = useState(false);
 
   const fetchRecipe = async () => {
     const { data } = await axios.get(`/api/recipes/${id}`);
@@ -48,107 +49,301 @@ const RecipeDetails = () => {
   if (!recipe) return <Container className="py-5 text-center">Loading...</Container>;
 
   return (
-    <Container className="py-4" style={{
-      background: 'rgba(255,255,255,0.96)',
-      borderRadius: '2.5rem',
-      minHeight: '80vh',
-      boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.10)'
-    }}>
-      <Row>
-        <Col md={6}>
-          {recipe.image && <Card.Img src={`/uploads/${recipe.image}`} className="mb-3 rounded-4 shadow" style={{
-            maxHeight: 350,
+    <Container
+      className="py-4"
+      style={{
+        background: 'rgba(30,30,30,0.93)', // Dark theme matching Home page
+        borderRadius: '2.5rem',
+        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.2)',
+        color: '#fff',
+        marginTop: '100px',
+        marginBottom: '10px',
+        padding: '20px',
+        maxWidth: '800px',
+      }}
+    >
+      {/* Image Section */}
+      {recipe.image && (
+        <Card.Img
+          src={`http://localhost:5000/uploads/${recipe.image}`}
+          className="mb-4 rounded-4 shadow"
+          style={{
+            maxHeight: 400,
             objectFit: 'cover',
-            border: '4px solid #fff',
-            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.13)'
-          }} />}
-          {recipe.video && <video controls src={`/uploads/${recipe.video}`} className="w-100 mb-3 rounded-4 shadow" style={{
-            maxHeight: 350,
-            border: '4px solid #fff',
-            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.13)'
-          }} />}
+            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.2)',
+          }}
+        />
+      )}
+
+      {/* Title, Tags, Description, and Rating */}
+      <Row className="mb-2">
+        <Col md={8}>
+          <h2
+            className="fw-bold mb-3"
+            style={{
+              color: '#ffc107',
+              fontSize: '2.5rem',
+              letterSpacing: '1px',
+            }}
+          >
+            {recipe.title}
+          </h2>
+          <div className="mb-3">
+            <Badge bg="info" className="me-2">
+              {recipe.category}
+            </Badge>
+            {recipe.event && (
+              <Badge bg="warning" text="dark">
+                {recipe.event}
+              </Badge>
+            )}
+          </div>
+          <p style={{ color: '#ddd', fontSize: '1.2rem' }}>
+            {recipe.description}
+          </p>
         </Col>
-        <Col md={6}>
-          <h2 className="fw-bold mb-2" style={{ color: '#333', fontSize: '2.2rem', letterSpacing: '1px' }}>{recipe.title}</h2>
-          <div className="mb-2">
-            <Badge bg="info" className="me-1">{recipe.category}</Badge>
-            {recipe.event && <Badge bg="warning" text="dark">{recipe.event}</Badge>}
+        <Col md={4} className="text-center">
+          <span
+            className="text-warning"
+            style={{ fontSize: '2rem' }}
+          >
+            {'★'.repeat(Math.round(recipe.rating || 0))}
+            {'☆'.repeat(5 - Math.round(recipe.rating || 0))}
+          </span>
+          <p style={{ color: '#bbb', fontSize: '1rem' }}>
+            ({recipe.reviews.length} reviews)
+          </p>
+          </Col>
+      </Row>
+      <Row className="mb-5">
+          <div >
+            <i
+              className="bi bi-pencil-square text-warning fs-4 me-3"
+              style={{ cursor: 'pointer' }}
+              onClick={() => setShowReview(true)}
+              title="Add Review"
+            ></i>
+            <i
+              className={`bi ${isFavorite ? 'bi-heart-fill text-danger' : 'bi-heart text-danger'} fs-4 me-3 `}
+              style={{ cursor: 'pointer' }}
+              onClick={handleFavorite}
+              title={isFavorite ? 'Unfavorite' : 'Favorite'}
+            ></i>
+            <div className="dropdown d-inline">
+              <i
+                className="bi bi-share text-secondary fs-4"
+                style={{ cursor: 'pointer' }}
+                onClick={() => setShowShareOptions(!showShareOptions)}
+                title="Share"
+              ></i>
+              {showShareOptions && (
+                <div
+                  className="dropdown-menu show"
+                  style={{
+                    position: 'absolute',
+                    background: 'rgba(40,40,40,0.97)',
+                    borderRadius: '0.5rem',
+                    padding: '0.5rem',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                    display: 'flex', // Ensures icons are aligned properly
+                    gap: '0.2rem',
+                    width: '150px', // Reduces the width of the dropdown
+                    justifyContent: 'space-around',
+                  }}
+                >
+                  <i
+                    className="bi bi-whatsapp text-success fs-5 me-3"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() =>
+                      window.open(
+                        `https://wa.me/?text=${encodeURIComponent(window.location.href)}`,
+                        '_blank'
+                      )
+                    }
+                    title="Share on WhatsApp"
+                  ></i>
+                  <i
+                    className="bi bi-facebook text-primary fs-5 me-3"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() =>
+                      window.open(
+                        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`,
+                        '_blank'
+                      )
+                    }
+                    title="Share on Facebook"
+                  ></i>
+                  <i
+                    className="bi bi-twitter text-info fs-5"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() =>
+                      window.open(
+                        `https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`,
+                        '_blank'
+                      )
+                    }
+                    title="Share on Twitter"
+                  ></i>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="mb-2">
-            <span className="text-warning" style={{ fontSize: '1.2rem' }}>{'★'.repeat(Math.round(recipe.rating || 0))}{'☆'.repeat(5 - Math.round(recipe.rating || 0))}</span>
-            <span className="ms-2" style={{ color: '#64748b' }}>({recipe.reviews.length} reviews)</span>
-          </div>
-          <p style={{ color: '#64748b', fontSize: '1.08rem' }}>{recipe.description}</p>
-          <ListGroup className="mb-2">
-            <ListGroup.Item><b>Prep Time:</b> {recipe.prepTime} min</ListGroup.Item>
-            <ListGroup.Item><b>Serving Size:</b> {recipe.servingSize}</ListGroup.Item>
-            <ListGroup.Item><b>Difficulty:</b> {recipe.difficulty}</ListGroup.Item>
-            {recipe.nutritionalInfo && <ListGroup.Item><b>Nutritional Info:</b> {recipe.nutritionalInfo}</ListGroup.Item>}
+        </Row>
+
+      {/* Ingredients Section */}
+      <Row className="mb-4">
+        <Col>
+          <h4 className="fw-bold mb-3" style={{ color: '#ffc107' }}>
+            Ingredients
+          </h4>
+          <ListGroup>
+            {recipe.ingredients.map((ing, i) => (
+              <ListGroup.Item
+                key={i}
+                className="d-flex align-items-center"
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  color: ing.checked ? '#aaa' : '#212529', // Change color if checked
+                  textDecoration: ing.checked ? 'line-through' : 'none', // Strike-through if checked
+                }}
+              >
+                <Form.Check
+                  type="checkbox"
+                  className="me-2"
+                  checked={ing.checked || false}
+                  onChange={() => {
+                    const updatedIngredients = [...recipe.ingredients];
+                    updatedIngredients[i].checked = !updatedIngredients[i].checked;
+                    setRecipe({ ...recipe, ingredients: updatedIngredients });
+                  }}
+                />
+                {ing.name}
+                {ing.quantity ? ` – ${ing.quantity}` : ''}
+              </ListGroup.Item>
+            ))}
           </ListGroup>
-          <Button variant="outline-primary" className="me-2 fw-bold btn-glass" onClick={() => setShowReview(true)}>Add Review</Button>
-          <Button variant={isFavorite ? "danger" : "outline-danger"} className="me-2 fw-bold btn-glass" onClick={handleFavorite}>
-            {isFavorite ? "Unfavorite" : "Favorite"}
-          </Button>
-          {/* Social sharing buttons */}
-          <Button variant="outline-secondary" className="me-2 fw-bold btn-glass" href={`https://wa.me/?text=${encodeURIComponent(window.location.href)}`} target="_blank">WhatsApp</Button>
-          <Button variant="outline-secondary" className="me-2 fw-bold btn-glass" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`} target="_blank">Twitter</Button>
-          <Button variant="outline-secondary" className="fw-bold btn-glass" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} target="_blank">Facebook</Button>
         </Col>
       </Row>
-      <Row className="mt-4">
-        <Col md={6}>
-          <h4 className="fw-bold" style={{ color: '#334155' }}>Ingredients</h4>
-          <ListGroup>
-            {recipe.ingredients.map((ing, i) =>
-              <ListGroup.Item key={i}>
-                {ing.name}{ing.quantity ? ` – ${ing.quantity}` : ''}
-              </ListGroup.Item>
-            )}
-          </ListGroup>
-        </Col>
-        <Col md={6}>
-          <h4 className="fw-bold" style={{ color: '#334155' }}>Preparation Steps</h4>
-          <ol style={{ color: '#64748b', fontSize: '1.05rem' }}>
-            {recipe.steps.map((step, i) => <li key={i}>{step}</li>)}
+
+      {/* Preparation Steps Section */}
+      <Row className="mb-4">
+        <Col>
+          <h4 className="fw-bold mb-3" style={{ color: '#ffc107' }}>
+            Preparation Steps
+          </h4>
+          <ol style={{ color: '#ddd', fontSize: '1.2rem', listStyleType: 'none', paddingLeft: '0' }}>
+            {recipe.steps.map((step, i) => (
+              <li key={i} className="mb-2">
+                <span style={{ color: '#ffc107', fontWeight: 'bold' }}>→</span> {step}
+              </li>
+            ))}
           </ol>
         </Col>
       </Row>
-      <Row className="mt-4">
+
+      {/* Reviews Section */}
+      <Row>
         <Col>
-          <h4 className="fw-bold" style={{ color: '#334155' }}>Reviews</h4>
-          {recipe.reviews.length === 0 && <p>No reviews yet.</p>}
+          <h4 className="fw-bold mb-3" style={{ color: '#ffc107' }}>
+            Reviews
+          </h4>
+          {recipe.reviews.length === 0 && (
+            <p style={{ color: '#ddd' }}>No reviews yet.</p>
+          )}
           {recipe.reviews.map((r, i) => (
-            <Card key={i} className="mb-2" style={{
-              borderRadius: '1.2rem',
-              background: 'rgba(245,248,255,0.97)',
-              boxShadow: '0 2px 12px 0 rgba(31, 38, 135, 0.07)'
-            }}>
+            <Card
+              key={i}
+              className="mb-2"
+              style={{
+                borderRadius: '1.2rem',
+                background: 'rgba(40,40,40,0.97)',
+                boxShadow: '0 2px 12px 0 rgba(31, 38, 135, 0.2)',
+                color: '#fff',
+              }}
+            >
               <Card.Body>
-                <span className="text-warning" style={{ fontSize: '1.1rem' }}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
-                <p className="mb-0" style={{ color: '#64748b' }}>{r.comment}</p>
+                <span
+                  className="text-warning"
+                  style={{ fontSize: '1.2rem' }}
+                >
+                  {'★'.repeat(r.rating)}
+                  {'☆'.repeat(5 - r.rating)}
+                </span>
+                <p className="mb-0" style={{ color: '#212529' }}>
+                  {r.comment}
+                </p>
               </Card.Body>
             </Card>
           ))}
         </Col>
       </Row>
+
+      {/* Add Review Modal */}
       <Modal show={showReview} onHide={() => setShowReview(false)} centered>
-        <Modal.Header closeButton style={{ borderRadius: '1.5rem 1.5rem 0 0', background: '#f1f5f9' }}>
+        <Modal.Header
+          closeButton
+          style={{
+            borderRadius: '1.5rem 1.5rem 0 0',
+            background: 'rgba(40,40,40,0.97)',
+            color: '#fff',
+          }}
+        >
           <Modal.Title>Add Review</Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ borderRadius: '0 0 1.5rem 1.5rem', background: '#f8fafc' }}>
+        <Modal.Body
+          style={{
+            borderRadius: '0 0 1.5rem 1.5rem',
+            background: 'rgba(30,30,30,0.93)',
+            color: '#fff',
+          }}
+        >
           {error && <Alert variant="danger">{error}</Alert>}
           <Form onSubmit={handleReview}>
             <Form.Group className="mb-3">
               <Form.Label>Rating</Form.Label>
-              <Form.Select value={review.rating} onChange={e => setReview({ ...review, rating: e.target.value })} className="btn-glass">
-                {[5,4,3,2,1].map(n => <option key={n} value={n}>{n}</option>)}
+              <Form.Select
+                value={review.rating}
+                onChange={(e) =>
+                  setReview({ ...review, rating: e.target.value })
+                }
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  color: '#212529',
+                }}
+              >
+                {[5, 4, 3, 2, 1].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
               </Form.Select>
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Comment</Form.Label>
-              <Form.Control as="textarea" value={review.comment} onChange={e => setReview({ ...review, comment: e.target.value })} className="btn-glass" />
+              <Form.Control
+                as="textarea"
+                value={review.comment}
+                onChange={(e) =>
+                  setReview({ ...review, comment: e.target.value })
+                }
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  color: '#212529',
+                }}
+              />
             </Form.Group>
-            <Button type="submit" variant="success" className="btn-glass px-4 fw-bold">Submit</Button>
+            <Button
+              type="submit"
+              variant="warning"
+              className="px-4 fw-bold"
+              style={{
+                backgroundColor: '#ffc107',
+                border: 'none',
+                color: '#212529',
+              }}
+            >
+              Submit
+            </Button>
           </Form>
         </Modal.Body>
       </Modal>

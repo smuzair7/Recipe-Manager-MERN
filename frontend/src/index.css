@@ -3,7 +3,8 @@ body {
   background: linear-gradient(120deg, #e0e7ef 0%, #f8fafc 100%);
   min-height: 100vh;
   font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-  color: #1e293b;
+  /*color: #1e293b;*/
+  color: white;
   letter-spacing: 0.01em;
   font-size: 1.08rem;
   transition: background 0.4s;
@@ -30,6 +31,59 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* Ensure no underline on navbar links or brand */
+.navbar a,
+.navbar a:hover,
+.navbar-brand,
+.navbar-brand:hover {
+  text-decoration: none !important;
+}
+
+/* Navbar colors */
+.navbar .nav-link,
+.navbar .navbar-brand,
+.navbar .dropdown-toggle {
+  color: #f8fafc !important;
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 500;
+  margin-right: 1rem;
+}
+
+.navbar .nav-link:hover,
+.navbar .navbar-brand:hover,
+.navbar .dropdown-toggle:hover {
+  color: #ffc107 !important;
+}
+
+/* Push brand to left and nav to right */
+.navbar .navbar-brand {
+  margin-right: auto !important;
+}
+
+.navbar .nav {
+  margin-left: auto !important;
+}
+
+/* Custom register button */
+.btn-register {
+  background: linear-gradient(90deg, #ffdd57 0%, #facc15 100%) !important;
+  color: #1e293b !important;
+  font-weight: 600;
+  padding: 0.5rem 1.5rem;
+  border-radius: 2rem;
+  border: none;
+  transition: background 0.3s ease;
+  box-shadow: 0 2px 10px rgba(234, 179, 8, 0.25);
+}
+
+.btn-register:hover {
+  background: linear-gradient(90deg, #facc15 0%, #eab308 100%) !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 14px rgba(234, 179, 8, 0.35);
+  transform: translateY(-2px);
+}
+
 
 .navbar-glass {
   background: rgba(245,248,255,0.96) !important;
@@ -73,27 +127,6 @@ body {
   transform: translateY(-4px) scale(1.025);
 }
 
-.navbar .nav-link, .navbar .navbar-brand {
-  border-radius: 2rem;
-  margin: 0 0.25rem;
-  padding: 0.6rem 1.5rem !important;
-  font-weight: 500;
-  color: #334155 !important;
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-  font-size: 1.13rem;
-  letter-spacing: 0.04em;
-}
-.navbar .nav-link.active, .navbar .nav-link:focus, .navbar .nav-link:hover {
-  background: linear-gradient(90deg, #3b82f6 0%, #64748b 100%);
-  color: #fff !important;
-  box-shadow: 0 2px 12px 0 rgba(59,130,246,0.10);
-}
-
-.navbar .nav-dropdown .dropdown-menu {
-  border-radius: 1.2rem;
-  box-shadow: 0 4px 18px 0 rgba(31, 38, 135, 0.10);
-  border: 1px solid #e0e7ef;
-}
 
 .form-select, .form-control {
   border-radius: 2rem !important;
@@ -138,7 +171,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Inter', 'Segoe UI', 'Roboto', Arial, sans-serif;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: #1e293b;
+  /*color: #1e293b;*/
 }
 
 /* Subtle fade-in for containers */

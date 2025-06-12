@@ -4,6 +4,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const recipeRoutes = require('./routes/recipeRoutes');
+const mealPlanRoutes = require('./routes/mealPlanRoute');
 const path = require('path');
 
 dotenv.config();
@@ -16,6 +17,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/users', userRoutes);
 app.use('/api/recipes', recipeRoutes);
+app.use('/api/mealplans', mealPlanRoutes);
 
 app.get('/', (req, res) => {
   res.send('Today Recipe API is running');

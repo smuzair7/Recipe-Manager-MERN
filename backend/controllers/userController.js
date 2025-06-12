@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Recipe = require('../models/Recipe');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -34,5 +35,28 @@ exports.login = async (req, res) => {
 
 // Get user profile
 exports.getProfile = async (req, res) => {
+  console.log("Controller: Returning profile for", req.user);
   res.json(req.user);
+};
+
+// Get user's favorite recipes
+exports.getFavorites = async (req, res) => {
+
+  try {
+    const userId = req.user.id;
+    console.log('FINDING FAV FOR USER: ',userId);
+
+    const user = await User.findById(userId).populate('favorites');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    console.log('FINDING FAV: ',user.favorites);
+
+    res.json({ favorites: user.favorites });
+  } catch (err) {
+    console.error('Error fetching favorites:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
 };

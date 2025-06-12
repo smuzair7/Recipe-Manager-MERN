@@ -154,4 +154,37 @@ exports.toggleFavorite = async (req, res) => {
   }
 };
 
+// Get subcategories for a specific category
+exports.getSubCategory = async (req, res) => {
+  try {
+    const { category } = req.query; // e.g., /api/recipes/subcategories?category=Snacks
+
+    if (!category) {
+      return res.status(400).json({ message: 'Category is required' });
+    }
+
+    const subcategories = await Recipe.distinct('subcategory', { category });
+
+    res.json(subcategories.filter(Boolean));
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Get all unique events
+exports.getEvents = async (req, res) => {
+  try {
+    const events = await Recipe.distinct('event');
+    console.log('EVENTS', events);
+    if (!events || events.length === 0) {
+      return res.status(404).json({ message: 'No events found' });
+    }
+    res.json(events.filter(Boolean)); // remove null/empty values
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+    console.log('ERROR FETCHING EVENTS',err)
+  }
+};
+
+
 exports.upload = upload;

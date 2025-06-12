@@ -1,14 +1,20 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+
+
 const protect = async (req, res, next) => {
   let token;
+  console.log("Middleware: Received token:", token);
+
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
     try {
       token = req.headers.authorization.split(' ')[1];
+      console.log("Middleware: Received token:", token);
+
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = await User.findById(decoded.id).select('-password');
       next();
@@ -21,4 +27,7 @@ const protect = async (req, res, next) => {
   }
 };
 
+
+
 module.exports = { protect };
+//module.exports = authMiddleware;
