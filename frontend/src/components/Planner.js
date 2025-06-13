@@ -25,51 +25,87 @@ const Planner = () => {
     }).then(res => setOldPlans(res.data));
   }, []);
 
+  const handleDeletePlan = async (planId) => {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.delete(`/api/mealplans/${planId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      setOldPlans(oldPlans.filter(plan => plan._id !== planId));
+      setMessage('Meal plan deleted.');
+      setTimeout(() => setMessage(''), 3000);
+      window.location.reload(); // Refresh the page to reflect changes
+    } catch (err) {
+      console.error(err);
+      setMessage('Error deleting meal plan.');
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
+
   const handleSavePlan = async () => {
-  const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token');
 
-  if (!planName || Object.keys(selected).length < 7) {
-    setMessage('Please provide a plan name and select recipes for all days.');
-    setTimeout(() => setMessage(''), 3000);
-    return;
-  }
+    if (!planName || Object.keys(selected).length < 7) {
+      setMessage('Please provide a plan name and select recipes for all days.');
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
 
-  try {
-    for (const [date, recipeId] of Object.entries(selected)) {
-      await axios.post(
+    const week = Object.entries(selected).map(([date, recipeId]) => ({
+      date,
+      recipe: recipeId
+    }));
+
+    try {
+      const { data } = await axios.post(
         '/api/mealplans/add',
-        { date, recipeId },
+        { name: planName, week },
         {
           headers: {
             Authorization: `Bearer ${token}`
           }
         }
       );
-    }
 
-    setOldPlans([...oldPlans, { name: planName, days: selected }]);
-    setCreatingPlan(false);
-    setSelected({});
-    setPlanName('');
-    setMessage('Plan saved successfully!');
-    setTimeout(() => setMessage(''), 3000);
-  } catch (err) {
-    console.error(err);
-    setMessage('Error saving plan.');
-    setTimeout(() => setMessage(''), 3000);
-  }
-};
+      setOldPlans([...oldPlans, data.mealPlan]);
+      setCreatingPlan(false);
+      setSelected({});
+      setPlanName('');
+      setMessage('Plan saved successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      console.error(err);
+      setMessage('Error saving plan.');
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
 
 
   const generateShoppingList = (plan) => {
-    const selectedRecipes = favorites.filter(r => Object.values(plan.days).includes(r._id));
-    const ingredients = selectedRecipes.flatMap(r => r.ingredients);
-    const uniqueIngredients = Array.from(new Set(ingredients.map(i => i.name))).map(name => ({
+    const ingredients = plan.week.flatMap(entry => entry.recipe?.ingredients || []);
+    const ingredientMap = {};
+
+    ingredients.forEach(({ name, quantity }) => {
+      if (ingredientMap[name]) {
+        ingredientMap[name].push(quantity);
+      } else {
+        ingredientMap[name] = [quantity];
+      }
+    });
+
+    const uniqueIngredients = Object.entries(ingredientMap).map(([name, quantities]) => ({
       name,
-      quantity: ingredients.find(i => i.name === name)?.quantity || '',
+      quantities
     }));
+
     setShoppingList(uniqueIngredients);
   };
+
 
   const week = [...Array(7)].map((_, i) => {
     const date = new Date();
@@ -133,6 +169,12 @@ const Planner = () => {
                   style={{ cursor: 'pointer' }}
                   title="Show Shopping List"
                   onClick={() => generateShoppingList(plan)}
+                ></i>
+                <i
+                  className="bi bi-trash text-danger fs-5 ms-3"
+                  style={{ cursor: 'pointer' }}
+                  title="Delete Plan"
+                  onClick={() => handleDeletePlan(plan._id)}
                 ></i>
               </div>
             </ListGroup.Item>
@@ -269,15 +311,15 @@ const Planner = () => {
             {currentPlan.name}
           </h4>
           <ListGroup>
-            {Object.entries(currentPlan.days).map(([day, recipeId], i) => (
+            {currentPlan.week.map((entry, i) => (
               <ListGroup.Item
                 key={i}
                 style={{
                   background: 'rgba(255,255,255,0.08)',
-                  color: '#fff',
+                  color: '#212529',
                 }}
               >
-                {day}: {favorites.find((f) => f._id === recipeId)?.title || 'No Recipe Selected'}
+                {entry.date}: {entry.recipe?.title || 'No Recipe Selected'}
               </ListGroup.Item>
             ))}
           </ListGroup>

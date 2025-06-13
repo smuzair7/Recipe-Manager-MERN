@@ -73,6 +73,7 @@ const AddRecipe = () => {
     data.set('event', customEvent || form.event);
     try {
       const token = localStorage.getItem('token');
+      console.log("RECIPE TOKEN: ", token);
       await axios.post('/api/recipes', data, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
       });

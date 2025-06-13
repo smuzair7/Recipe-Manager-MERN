@@ -17,13 +17,21 @@ const Login = () => {
     setSuccess('');
     try {
       const { data } = await axios.post('/api/users/login', { email, password });
+
+      // Store token and user
       localStorage.setItem('token', data.token);
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+
+
       setSuccess('Login successful! Redirecting...');
-      setTimeout(() => navigate('/profile'), 1200);
+      setTimeout(() => {navigate('/profile'); window.location.reload();}, 1200);
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     }
   };
+
 
   return (
     <div

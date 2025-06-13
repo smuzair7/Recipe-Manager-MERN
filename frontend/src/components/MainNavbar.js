@@ -4,43 +4,47 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const MainNavbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const userData = localStorage.getItem('user');
+    return userData ? JSON.parse(userData) : null;
+  });
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkToken = () => {
-      const token = localStorage.getItem('token');
-      setIsLoggedIn(!!token);
-      if (token) fetchProfile();
-      else setUser(null);
-    };
-    checkToken();
-    const interval = setInterval(checkToken, 1000);
-    return () => clearInterval(interval);
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+
+    if (token && !user) {
+      fetchProfile(token);
+    }
   }, []);
 
-  const fetchProfile = async () => {
-    console.log(localStorage.getItem('token'))
+  const fetchProfile = async (token) => {
     try {
       const res = await fetch('http://localhost:5000/api/users/profile', {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${token}`,
         },
       });
+
       if (res.ok) {
         const data = await res.json();
         setUser(data);
-
-        console.log("USER RECIEVED");
-        console.log(data);
+        localStorage.setItem('user', JSON.stringify(data));
+      } else {
+        // Invalid token
+        handleLogout();
       }
-    } catch (e){
-      console.log('ERROR',e);
+    } catch (error) {
+      console.error('Fetch profile error:', error);
+      handleLogout();
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setIsLoggedIn(false);
     setUser(null);
     navigate('/');
@@ -54,12 +58,7 @@ const MainNavbar = () => {
           <img 
             src="/recipe.png" 
             alt="Logo" 
-            style={{ 
-              height: '40px', 
-              marginRight: '10px', 
-              borderRadius: '0', // Ensure no circular styling
-              overflow: 'visible' // Prevent clipping
-            }} 
+            style={{ height: '40px', marginRight: '10px' }} 
           />
           Today Recipe
         </Navbar.Brand>
@@ -72,6 +71,7 @@ const MainNavbar = () => {
               <>
                 <Nav.Link as={Link} to="/add" className="text-light">Add Recipe</Nav.Link>
                 <Nav.Link as={Link} to="/planner" className="text-light">Planner</Nav.Link>
+                <Nav.Link as={Link} to="/shopping-list" className="text-light">Shopping List</Nav.Link>
               </>
             )}
             {isLoggedIn && user ? (

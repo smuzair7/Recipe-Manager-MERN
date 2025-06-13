@@ -30,7 +30,7 @@ const Register = () => {
       const { data } = await axios.post('/api/users/register', { name, email, password });
       localStorage.setItem('token', data.token);
       setSuccess('Registration successful! Redirecting...');
-      setTimeout(() => navigate('/profile'), 1200);
+      setTimeout(() => {navigate('/profile'); window.location.reload();}, 1200);
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     }
