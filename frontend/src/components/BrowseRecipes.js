@@ -46,7 +46,27 @@ const BrowseRecipes = () => {
     if (filters.subcategory) params.subcategory = filters.subcategory;
 
     const { data } = await axios.get('/api/recipes', { params });
-    setRecipes(data);
+
+    // Apply sorting locally after fetching recipes
+    let sortedRecipes = [...data];
+    switch (filters.sort) {
+      case 'rating-desc':
+        sortedRecipes.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'rating-asc':
+        sortedRecipes.sort((a, b) => a.rating - b.rating);
+        break;
+      case 'time-asc':
+        sortedRecipes.sort((a, b) => a.prepTime - b.prepTime);
+        break;
+      case 'time-desc':
+        sortedRecipes.sort((a, b) => b.prepTime - a.prepTime);
+        break;
+      default:
+        break;
+    }
+
+    setRecipes(sortedRecipes);
     setLoading(false);
   };
 
@@ -70,6 +90,7 @@ const BrowseRecipes = () => {
       });
       setSubcategories(data); // Update subcategories state
       console.log('Subcategories:', data);
+      fetchRecipes();
     } catch (error) {
       console.error('Error fetching subcategories:', error);
     }
@@ -77,6 +98,7 @@ const BrowseRecipes = () => {
 
   const handleSubcategorySelect = (sub) => {
     setFilters({ ...filters, subcategory: sub, category: '' });
+    fetchRecipes();
   };
 
   const renderSection = (title, filterFn) => {
@@ -94,7 +116,7 @@ const BrowseRecipes = () => {
                 style={{
                   background: 'rgba(40,40,40,0.97)',
                   borderRadius: '2rem',
-                  color: '#fff'
+                  color: '#212529'
                 }}>
                 {recipe.image && <Card.Img variant="top" src={`http://localhost:5000/uploads/${recipe.image}`} style={{
                   height: 180,
@@ -250,7 +272,7 @@ const BrowseRecipes = () => {
             {/* Sub Category Dropdown */}
             <Col md={1}>
               <div style={{ position: 'relative' }}>
-                <Form.Select name="event" value={filters.category} onChange={handleFilterChange}
+                <Form.Select name="event" value={filters.subcategory} onChange={(e) => handleSubcategorySelect(e.target.value)}
                   style={{
                     background: 'rgba(255,255,255,0.08)',
                     color: '#212529',
@@ -265,9 +287,9 @@ const BrowseRecipes = () => {
                   <option value="" hidden>
                     SubCategory
                   </option>
-                  {subcategories.map((sub, index) => (
-                    <option key={index} value={sub}>
-                      {sub}
+                  {subcategories.length!=0 && Object.keys(subcategories).map(sub => (
+                    <option key={sub} value={sub}>
+                      {subcategories[sub]}
                     </option>
                   ))}
                   </Form.Select>
@@ -550,8 +572,6 @@ const BrowseRecipes = () => {
                   <option value="rating-asc">Lowest Rating</option>
                   <option value="time-asc">Quickest First</option>
                   <option value="time-desc">Longest First</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
                 </Form.Select>
                 <span
                     style={{
@@ -601,7 +621,7 @@ const BrowseRecipes = () => {
                       borderRadius: '2rem',
                       color: '#fff'
                     }}>
-                    {recipe.image && <Card.Img variant="top" src={`/uploads/${recipe.image}`} style={{
+                    {recipe.image && <Card.Img variant="top" src={`http://localhost:5000/uploads/${recipe.image}`} style={{
                       height: 180,
                       objectFit: 'cover',
                       borderRadius: '2rem 2rem 0 0'
@@ -628,15 +648,15 @@ const BrowseRecipes = () => {
           </Row>
         ) : (
           <>
-            {renderSection('Breakfast', r => r.category === 'Breakfast')}
-            {renderSection('Birthday Special', r => r.event)}
+            {renderSection('Breakfast', r => r.event === 'Breakfast')}
+            {renderSection('Eid  Special', r => r.event === 'Eid')}
             {renderSection('Quick Recipes (Under 15 Minutes)', r => parseInt(r.prepTime) <= 15)}
             {renderSection('Highly Rated', r => r.rating >= 4)}
             {renderSection('Other', r => {
               // Exclude recipes already shown in other categories
               const isInOtherCategories =
-                r.category === 'Breakfast' ||
-                r.event ||
+                r.event === 'Breakfast' ||
+                r.event === 'Eid' ||
                 parseInt(r.prepTime) <= 15 ||
                 r.rating >= 4;
               return !isInOtherCategories;
