@@ -288,7 +288,7 @@ const Planner = () => {
                 className="d-flex justify-content-between align-items-center"
                 style={{
                   background: 'rgba(255,255,255,0.08)',
-                  color: '#fff',
+                  color: '#212529',
                 }}
               >
                 {item.name}

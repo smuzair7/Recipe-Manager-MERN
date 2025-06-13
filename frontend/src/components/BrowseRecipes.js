@@ -17,6 +17,7 @@ const BrowseRecipes = () => {
   });
 
   const [categories, setCategories] = useState({});
+  const [subcategories, setSubcategories] = useState({});
   const [expandedCategory, setExpandedCategory] = useState('');
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -58,9 +59,20 @@ const BrowseRecipes = () => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
-  const handleCategoryClick = (cat) => {
+  const handleCategoryClick = async (cat) => {
     setExpandedCategory(expandedCategory === cat ? '' : cat);
     setFilters({ ...filters, category: cat, subcategory: '' });
+
+    try {
+      console.log('Fetching subcategories for category:', cat);
+      const { data } = await axios.get('/api/recipes/subcategories', {
+        params: { category: cat },
+      });
+      setSubcategories(data); // Update subcategories state
+      console.log('Subcategories:', data);
+    } catch (error) {
+      console.error('Error fetching subcategories:', error);
+    }
   };
 
   const handleSubcategorySelect = (sub) => {
@@ -183,9 +195,9 @@ const BrowseRecipes = () => {
             </Col>
 
             {/* Category Dropdown */}
-            <Col md={2}>
+            <Col md={1}>
               <div style={{ position: 'relative' }}>
-                <Form.Select name="event" value={filters.category} onChange={handleFilterChange}
+                <Form.Select name="event" value={filters.category} onChange={(e) => handleCategoryClick(e.target.value)}
                   style={{
                     background: 'rgba(255,255,255,0.08)',
                     color: '#212529',
@@ -193,36 +205,17 @@ const BrowseRecipes = () => {
                     borderRadius: '2rem',
                     paddingRight: '2rem',
                     maxHeight: '150px',
-                    overflowY: 'auto' 
+                    overflowY: 'auto' ,
+                    fontSize: '10px'
                   }}>
                   <option value="" hidden>
                     Category
                   </option>
-                  {Object.entries(categories).map(([cat, subs]) => (
-                    <div key={cat}>
-                      <div
-                        onClick={() => handleCategoryClick(cat)}
-                        style={{ cursor: 'pointer', fontWeight: 'bold', color: '#fff' }}
-                      >
-                        {expandedCategory === cat ? '▼' : '▶'} {cat}
-                      </div>
-                      <Collapse in={expandedCategory === cat}>
-                        <div style={{ paddingLeft: '1rem' }}>
-                          {subs.map(sub => (
-                            <div
-                              key={sub}
-                              onClick={() => handleSubcategorySelect(sub)}
-                              style={{ cursor: 'pointer', color: '#ccc' }}
-                            >
-                              - {sub}
-                            </div>
-                          ))}
-                        </div>
-                      </Collapse>
-                    </div>
-                  ))}
-                </Form.Select>
-                <span
+                  {Object.keys(categories).map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </Form.Select>
+                    <span
                     style={{
                       position: 'absolute',
                       right: '10px',
@@ -235,27 +228,83 @@ const BrowseRecipes = () => {
                   >
                     ▼
                   </span>
-                {filters.category && (
-                  <span
-                    onClick={() => setFilters({ ...filters, category: '' })}
+                  {filters.category && (
+                    <span
+                      onClick={() => setFilters({ ...filters, event: '' })}
+                      style={{
+                        position: 'absolute',
+                        right: '25px',
+                        top: '45%',
+                        transform: 'translateY(-50%)',
+                        cursor: 'pointer',
+                        color: '#fff',
+                        fontSize: '10px', 
+                      }}
+                    >
+                      ×
+                    </span>
+                  )}
+              </div>
+            </Col>
+
+            {/* Sub Category Dropdown */}
+            <Col md={1}>
+              <div style={{ position: 'relative' }}>
+                <Form.Select name="event" value={filters.category} onChange={handleFilterChange}
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    color: '#212529',
+                    border: '1.5px solid #ffc107',
+                    borderRadius: '2rem',
+                    paddingRight: '2rem',
+                    maxHeight: '150px',
+                    overflowY: 'auto' ,
+                    fontSize: '10px'
+                  }}
+                  >
+                  <option value="" hidden>
+                    SubCategory
+                  </option>
+                  {subcategories.map((sub, index) => (
+                    <option key={index} value={sub}>
+                      {sub}
+                    </option>
+                  ))}
+                  </Form.Select>
+                    <span
                     style={{
                       position: 'absolute',
-                      right: '25px',
-                      top: '45%',
+                      right: '10px',
+                      top: '50%',
                       transform: 'translateY(-50%)',
-                      cursor: 'pointer',
+                      pointerEvents: 'none',
                       color: '#212529',
-                      fontSize: '2rem'
+                      fontSize: '1rem'
                     }}
                   >
-                    ×
+                    ▼
                   </span>
-                )}
+                  {filters.subcategory && (
+                    <span
+                      onClick={() => setFilters({ ...filters, event: '' })}
+                      style={{
+                        position: 'absolute',
+                        right: '25px',
+                        top: '45%',
+                        transform: 'translateY(-50%)',
+                        cursor: 'pointer',
+                        color: '#fff',
+                        fontSize: '10px',
+                      }}
+                    >
+                      ×
+                    </span>
+                  )}
               </div>
             </Col>
 
             {/* Event */}
-            <Col md={2}>
+            <Col md={1}>
               <div style={{ position: 'relative' }}>
                 <Form.Select name="event" value={filters.event} onChange={handleFilterChange}
                   style={{
@@ -265,7 +314,8 @@ const BrowseRecipes = () => {
                     borderRadius: '2rem',
                     paddingRight: '2rem',
                     maxHeight: '150px',
-                    overflowY: 'auto' 
+                    overflowY: 'auto' ,
+                    fontSize: '10px'
                   }}>
                   <option value="" hidden>
                     Event
@@ -295,7 +345,7 @@ const BrowseRecipes = () => {
                       transform: 'translateY(-50%)',
                       cursor: 'pointer',
                       color: '#212529',
-                      fontSize: '2rem'
+                      fontSize: '10px',
                     }}
                   >
                     ×
@@ -305,7 +355,7 @@ const BrowseRecipes = () => {
             </Col>
 
             {/* Difficulty */}
-            <Col md={2}>
+            <Col md={1}>
               <div style={{ position: 'relative' }}>
                 <Form.Select name="difficulty" value={filters.difficulty} onChange={handleFilterChange}
                   style={{
@@ -315,7 +365,8 @@ const BrowseRecipes = () => {
                     borderRadius: '2rem',
                     paddingRight: '2rem',
                     maxHeight: '150px',
-                    overflowY: 'auto' 
+                    overflowY: 'auto' ,
+                    fontSize: '10px'
                   }}>
                   <option value="" hidden>
                     Difficulty
@@ -347,7 +398,7 @@ const BrowseRecipes = () => {
                       transform: 'translateY(-50%)',
                       cursor: 'pointer',
                       color: '#212529',
-                      fontSize: '2rem'
+                      fontSize: '10px',
                     }}
                   >
                     ×
@@ -357,12 +408,12 @@ const BrowseRecipes = () => {
             </Col>
 
             {/* Time */}
-            <Col md={2}>
+            <Col md={1}>
               <div style={{ position: 'relative' }}>
                 <Form.Control
                   type="number"
                   name="time"
-                  placeholder="Max Time (min)"
+                  placeholder="Time(min)"
                   min="1"
                   value={filters.time}
                   onChange={handleFilterChange}
@@ -370,7 +421,8 @@ const BrowseRecipes = () => {
                     background: 'rgba(255,255,255,0.08)',
                     color: '#212529',
                     border: '1.5px solid #ffc107',
-                    borderRadius: '2rem'
+                    borderRadius: '2rem',
+                    fontSize: '10px',
                   }}
                 />
                 {filters.time && (
@@ -383,7 +435,7 @@ const BrowseRecipes = () => {
                       transform: 'translateY(-50%)',
                       cursor: 'pointer',
                       color: '#212529',
-                      fontSize: '2rem'
+                      fontSize: '10px',
                     }}
                   >
                     ×
@@ -393,7 +445,7 @@ const BrowseRecipes = () => {
             </Col>
 
             {/* Ingredient */}
-            <Col md={2}>
+            <Col md={1}>
               <div style={{ position: 'relative' }}>
                 <Form.Control
                   name="ingredient"
@@ -404,7 +456,8 @@ const BrowseRecipes = () => {
                     background: 'rgba(255,255,255,0.08)',
                     color: '#212529',
                     border: '1.5px solid #ffc107',
-                    borderRadius: '2rem'
+                    borderRadius: '2rem',
+                    fontSize: '10px',
                   }}
                 />
                 {filters.ingredient && (
@@ -417,7 +470,7 @@ const BrowseRecipes = () => {
                       transform: 'translateY(-50%)',
                       cursor: 'pointer',
                       color: '#212529',
-                      fontSize: '2rem'
+                      fontSize: '10px',
                     }}
                   >
                     ×
@@ -427,14 +480,15 @@ const BrowseRecipes = () => {
             </Col>
 
             {/* Rating */}
-            <Col md={2}>
+            <Col md={1}>
               <div style={{ position: 'relative' }}>
                 <Form.Select name="rating" value={filters.rating} onChange={handleFilterChange}
                   style={{
                     background: 'rgba(255,255,255,0.08)',
                     color: '#212529',
                     border: '1.5px solid #ffc107',
-                    borderRadius: '2rem'
+                    borderRadius: '2rem',
+                    fontSize: '10px',
                   }}>
                   <option value="" hidden>Rating</option>
                   <option value="4">4+</option>
@@ -465,7 +519,64 @@ const BrowseRecipes = () => {
                       transform: 'translateY(-50%)',
                       cursor: 'pointer',
                       color: '#212529',
-                      fontSize: '2rem'
+                      fontSize: '10px',
+                    }}
+                  >
+                    ×
+                  </span>
+                )}
+              </div>
+            </Col>
+          
+
+
+        {/* Sort */}
+            <Col md={1} lg={1}>
+              <div style={{ position: 'relative' }}>
+                <Form.Select 
+                  name="sort" 
+                  value={filters.sort} 
+                  onChange={handleFilterChange}
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    color: '#212529',
+                    border: '1.5px solid #ffc107',
+                    borderRadius: '2rem',
+                    fontSize: '10px',
+                  }}
+                >
+                  <option value="" hidden>Sort</option>
+                  <option value="rating-desc">Highest Rating</option>
+                  <option value="rating-asc">Lowest Rating</option>
+                  <option value="time-asc">Quickest First</option>
+                  <option value="time-desc">Longest First</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                </Form.Select>
+                <span
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      pointerEvents: 'none',
+                      color: '#212529',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    ▼
+                  </span>
+                {filters.sort && (
+                  <span
+                    onClick={() => setFilters({ ...filters, event: '' })}
+                    style={{
+                      position: 'absolute',
+                      right: '25px',
+                      top: '45%',
+                      transform: 'translateY(-50%)',
+                      cursor: 'pointer',
+                      color: '#212529',
+                      fontSize: '10px',
                     }}
                   >
                     ×
