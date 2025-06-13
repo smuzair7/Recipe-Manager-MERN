@@ -13,7 +13,8 @@ const BrowseRecipes = () => {
     difficulty: '',
     rating: '',
     time: '',
-    ingredient: ''
+    ingredient: '',
+    sort: '',
   });
 
   const [categories, setCategories] = useState({});
@@ -31,43 +32,30 @@ const BrowseRecipes = () => {
     
   }, []);
 
-  const fetchRecipes = async () => {
+  const fetchRecipes = async (customFilters = filters) => {
     setLoading(true);
+
     const params = {
       keyword: search,
-      event: filters.event,
-      category: filters.category,
-      difficulty: filters.difficulty,
-      rating: filters.rating,
-      time: filters.time,
-      ingredient: filters.ingredient,
+      event: customFilters.event,
+      category: customFilters.category,
+      subcategory: customFilters.subcategory,
+      difficulty: customFilters.difficulty,
+      rating: customFilters.rating,
+      time: customFilters.time,
+      ingredient: customFilters.ingredient,
     };
 
-    if (filters.subcategory) params.subcategory = filters.subcategory;
+    console.log('Filters used for fetching recipes:', params); // Debugging log
 
-    const { data } = await axios.get('/api/recipes', { params });
-
-    // Apply sorting locally after fetching recipes
-    let sortedRecipes = [...data];
-    switch (filters.sort) {
-      case 'rating-desc':
-        sortedRecipes.sort((a, b) => b.rating - a.rating);
-        break;
-      case 'rating-asc':
-        sortedRecipes.sort((a, b) => a.rating - b.rating);
-        break;
-      case 'time-asc':
-        sortedRecipes.sort((a, b) => a.prepTime - b.prepTime);
-        break;
-      case 'time-desc':
-        sortedRecipes.sort((a, b) => b.prepTime - a.prepTime);
-        break;
-      default:
-        break;
+    try {
+      const { data } = await axios.get('/api/recipes', { params });
+      setRecipes(data);
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+    } finally {
+      setLoading(false);
     }
-
-    setRecipes(sortedRecipes);
-    setLoading(false);
   };
 
   const handleSearch = e => {
@@ -76,12 +64,19 @@ const BrowseRecipes = () => {
   };
 
   const handleFilterChange = e => {
+    e.preventDefault();
     setFilters({ ...filters, [e.target.name]: e.target.value });
+    console.log('Filter changed:', e.target.name, e.target.value); // Debugging log
+    fetchRecipes(); // Pass updated filters directly to fetchRecipes
   };
 
   const handleCategoryClick = async (cat) => {
+    const updatedFilters = { ...filters, category: cat, subcategory: '' }; // Create updated filters object
     setExpandedCategory(expandedCategory === cat ? '' : cat);
-    setFilters({ ...filters, category: cat, subcategory: '' });
+    setFilters(updatedFilters); // Update filters state
+
+    console.log('Selected category:', cat);
+    console.log('Updated filters:', updatedFilters); // Log updated filters
 
     try {
       console.log('Fetching subcategories for category:', cat);
@@ -90,15 +85,23 @@ const BrowseRecipes = () => {
       });
       setSubcategories(data); // Update subcategories state
       console.log('Subcategories:', data);
-      fetchRecipes();
+
+      // Pass updated filters directly to fetchRecipes
+      fetchRecipes(updatedFilters);
     } catch (error) {
       console.error('Error fetching subcategories:', error);
     }
   };
 
   const handleSubcategorySelect = (sub) => {
-    setFilters({ ...filters, subcategory: sub, category: '' });
-    fetchRecipes();
+    const updatedFilters = { ...filters, subcategory: sub }; // Create updated filters object
+    setFilters(updatedFilters); // Update filters state
+
+    console.log('Selected subcategory:', sub);
+    console.log('Updated filters:', updatedFilters); // Log updated filters
+
+    // Pass updated filters directly to fetchRecipes
+    fetchRecipes(updatedFilters);
   };
 
   const renderSection = (title, filterFn) => {
@@ -252,14 +255,14 @@ const BrowseRecipes = () => {
                   </span>
                   {filters.category && (
                     <span
-                      onClick={() => setFilters({ ...filters, event: '' })}
+                      onClick={() => {setFilters({ ...filters, category: '' }); fetchRecipes();}}
                       style={{
                         position: 'absolute',
                         right: '25px',
                         top: '45%',
                         transform: 'translateY(-50%)',
                         cursor: 'pointer',
-                        color: '#fff',
+                        color: '#212529',
                         fontSize: '10px', 
                       }}
                     >
@@ -272,7 +275,7 @@ const BrowseRecipes = () => {
             {/* Sub Category Dropdown */}
             <Col md={1}>
               <div style={{ position: 'relative' }}>
-                <Form.Select name="event" value={filters.subcategory} onChange={(e) => handleSubcategorySelect(e.target.value)}
+                <Form.Select name="event" value={filters.subcategory} onChange={(e) => handleSubcategorySelect(subcategories[e.target.value])}
                   style={{
                     background: 'rgba(255,255,255,0.08)',
                     color: '#212529',
@@ -308,14 +311,14 @@ const BrowseRecipes = () => {
                   </span>
                   {filters.subcategory && (
                     <span
-                      onClick={() => setFilters({ ...filters, event: '' })}
+                      onClick={() => {setFilters({ ...filters, subcategory: '' }); fetchRecipes();}}
                       style={{
                         position: 'absolute',
                         right: '25px',
                         top: '45%',
                         transform: 'translateY(-50%)',
                         cursor: 'pointer',
-                        color: '#fff',
+                        color: '#212529',
                         fontSize: '10px',
                       }}
                     >
@@ -359,7 +362,7 @@ const BrowseRecipes = () => {
                 </span>
                 {filters.event && (
                   <span
-                    onClick={() => setFilters({ ...filters, event: '' })}
+                    onClick={() => {setFilters({ ...filters, event: '' }); fetchRecipes();}}
                     style={{
                       position: 'absolute',
                       right: '25px',
@@ -412,7 +415,7 @@ const BrowseRecipes = () => {
                 </span> 
                 {filters.difficulty && (
                   <span
-                    onClick={() => setFilters({ ...filters, difficulty: '' })}
+                    onClick={() => {setFilters({ ...filters, difficulty: '' }); fetchRecipes();}}
                     style={{
                       position: 'absolute',
                       right: '25px',
@@ -449,7 +452,7 @@ const BrowseRecipes = () => {
                 />
                 {filters.time && (
                   <span
-                    onClick={() => setFilters({ ...filters, time: '' })}
+                    onClick={() => {setFilters({ ...filters, time: '' }); fetchRecipes();}}
                     style={{
                       position: 'absolute',
                       right: '25px',
@@ -484,7 +487,7 @@ const BrowseRecipes = () => {
                 />
                 {filters.ingredient && (
                   <span
-                    onClick={() => setFilters({ ...filters, ingredient: '' })}
+                    onClick={() => {setFilters({ ...filters, ingredient: '' }); fetchRecipes();}}
                     style={{
                       position: 'absolute',
                       right: '25px',
@@ -533,7 +536,7 @@ const BrowseRecipes = () => {
                   </span>
                   {filters.rating && (
                   <span
-                    onClick={() => setFilters({ ...filters, rating: '' })}
+                    onClick={() => {setFilters({ ...filters, rating: '' }); fetchRecipes();}}
                     style={{
                       position: 'absolute',
                       right: '25px',
@@ -588,7 +591,7 @@ const BrowseRecipes = () => {
                   </span>
                 {filters.sort && (
                   <span
-                    onClick={() => setFilters({ ...filters, event: '' })}
+                    onClick={() => {setFilters({ ...filters, sort: '' }); fetchRecipes();}}
                     style={{
                       position: 'absolute',
                       right: '25px',
@@ -619,7 +622,7 @@ const BrowseRecipes = () => {
                     style={{
                       background: 'rgba(40,40,40,0.97)',
                       borderRadius: '2rem',
-                      color: '#fff'
+                      color: '#212529'
                     }}>
                     {recipe.image && <Card.Img variant="top" src={`http://localhost:5000/uploads/${recipe.image}`} style={{
                       height: 180,

@@ -47,29 +47,35 @@ exports.addRecipe = async (req, res) => {
 // Get all recipes with search & filters
 exports.getRecipes = async (req, res) => {
   try {
-    const { keyword, time, ingredient, event, category, difficulty, rating } = req.query;
+    const { keyword, time, ingredient, event, category, subcategory, difficulty, rating } = req.query;
+
+    console.log('Query Parameters:', req.query); // Debugging log
+
     let query = {};
     if (keyword) query.title = { $regex: keyword, $options: 'i' };
     if (ingredient) query.ingredients = { $in: [ingredient] };
     if (event) query.event = event;
     if (category) query.category = category;
+    if (subcategory) query.subcategory = subcategory;
     if (difficulty) query.difficulty = difficulty;
     if (rating) query.rating = { $gte: Number(rating) };
-    // Time filter (e.g., under 30 min)
     if (time) query.prepTime = { $lte: time };
+
+    console.log('Query Object:', query); // Debugging log
+
     if (req.query.ids) {
-      // Support for shopping list: fetch recipes by IDs
       const ids = req.query.ids.split(',');
       const recipes = await Recipe.find({ _id: { $in: ids } }).populate('reviews');
       return res.json(recipes);
     }
+
     const recipes = await Recipe.find(query).populate('reviews');
     res.json(recipes);
   } catch (err) {
+    console.error('Error fetching recipes:', err); // Debugging log
     res.status(500).json({ message: err.message });
   }
 };
-
 // Get single recipe
 exports.getRecipe = async (req, res) => {
   try {
